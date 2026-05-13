@@ -1,22 +1,34 @@
-# Cricket Manager
+# Cricket Manager (localhost-ready)
 
-Simple localhost game where you draft 11 real-world cricket players and simulate a T20 score.
+A playable cricket manager game using real player names. Build an XI, respect budget/role constraints, and simulate a T20 score.
 
-## Run on localhost
+## Run now on localhost
 
 ```bash
 python3 -m http.server 8080
 ```
 
-Then open:
+Open: <http://localhost:8080>
 
-- http://localhost:8080
+## What is included
+
+- Player market with real cricket names.
+- Search + role filters.
+- Squad builder with:
+  - 11-player limit
+  - budget cap (100)
+  - role requirements (min batters, bowlers, all-rounder, wicketkeeper)
+- Auto-pick XI button.
+- Match simulation button.
+- Requested "abdulls" included:
+  - Abdul Samad
+  - Abdullah Shafique
+  - Abdullah Al Mamun
 
 ## Deploy to Vercel
 
-This is a static site. You can drag-and-drop this folder into Vercel, or run:
+This app is static. Deploy as-is:
 
 ```bash
-npm i -g vercel
-vercel
+npx vercel
 ```

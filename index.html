@@ -5,117 +5,191 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cricket Manager</title>
   <style>
-    :root { font-family: Inter, system-ui, Arial, sans-serif; }
-    body { margin: 0; background: #0b1220; color: #e6edf7; }
-    .wrap { max-width: 1100px; margin: 0 auto; padding: 24px; }
-    h1 { margin: 0 0 8px; }
-    .sub { color: #aab8d4; margin-bottom: 20px; }
-    .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
-    .panel { background: #121b2f; border: 1px solid #243658; border-radius: 14px; padding: 16px; }
-    .players { display: grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); gap: 10px; }
-    .card { background: #16233d; border: 1px solid #2d4674; border-radius: 12px; padding: 12px; }
-    .card h3 { margin: 0 0 4px; font-size: 1rem; }
-    .meta { color: #adc0e6; font-size: .9rem; }
-    button { background: #2f6fed; color: #fff; border: 0; border-radius: 10px; padding: 8px 12px; cursor: pointer; }
-    button:hover { background: #235cd0; }
-    .selected { margin-top: 12px; }
-    .squad-list li { margin: 6px 0; }
-    .score { font-size: 1.3rem; font-weight: 700; }
-    .ok { color: #8dffb2; }
+    :root { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; color-scheme: dark; }
+    body { margin: 0; background: #090f1d; color: #eaf0ff; }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    h1,h2,h3 { margin: 0; }
+    .sub { color: #a9badb; margin: 8px 0 18px; }
+    .layout { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+    .panel { background: #121c35; border: 1px solid #263f71; border-radius: 14px; padding: 16px; }
+    .top-row { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px; }
+    input, select { background:#0c1428; color:#eaf0ff; border:1px solid #2f4c84; border-radius:8px; padding:8px; }
+    .players { display:grid; grid-template-columns: repeat(auto-fill,minmax(220px,1fr)); gap:10px; }
+    .card { background:#17274a; border:1px solid #355a9c; border-radius:12px; padding:10px; }
+    .meta { color:#bdd0f5; font-size:.9rem; }
+    .pill { display:inline-block; background:#29497f; border-radius:999px; padding:2px 8px; font-size:.75rem; margin-top:6px; }
+    button { background:#2f6fed; color:white; border:0; border-radius:9px; padding:8px 12px; cursor:pointer; }
+    button:disabled { opacity:.45; cursor:not-allowed; }
+    .squad-list { padding-left: 18px; }
+    .score { font-size:1.3rem; font-weight:700; margin:.6rem 0; }
+    .ok { color:#90ffaf; }
+    .warn { color:#ffcc7a; }
+    .tiny { font-size:.85rem; color:#a9badb; }
+    .summary-grid { display:grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap:8px; margin:10px 0; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <h1>🏏 Cricket Manager</h1>
-    <div class="sub">Pick a squad of 11 from real-world players and simulate a quick T20 performance on localhost.</div>
-    <div class="grid">
+    <p class="sub">Build an XI from real players, include your Abdulls, and simulate a T20 on localhost.</p>
+
+    <div class="layout">
       <section class="panel">
-        <h2>Available Players</h2>
+        <div class="top-row">
+          <h2>Player Market</h2>
+          <div>
+            <input id="search" placeholder="Search player..." />
+            <select id="roleFilter">
+              <option value="All">All roles</option>
+              <option value="Batter">Batter</option>
+              <option value="Bowler">Bowler</option>
+              <option value="All-Rounder">All-Rounder</option>
+              <option value="Wicketkeeper">Wicketkeeper</option>
+            </select>
+          </div>
+        </div>
         <div id="players" class="players"></div>
       </section>
+
       <aside class="panel">
-        <h2>Your Squad (<span id="count">0</span>/11)</h2>
-        <ul id="squad" class="squad-list"></ul>
-        <div class="selected">
-          <button id="simulate">Simulate Match</button>
-          <p id="result" class="score"></p>
-          <p class="meta">Tip: “Add abdulls” included ✅ — Abdul Samad, Abdullah Shafique, and Abdullah Al Mamun.</p>
+        <h2 id="teamHeader">Your Squad (0/11)</h2>
+        <div class="summary-grid tiny">
+          <div>Budget: <b id="budgetUsed">0</b>/100</div>
+          <div>Roles OK: <b id="rolesOk">No</b></div>
         </div>
+        <ul id="squad" class="squad-list"></ul>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+          <button id="autoFill">Auto Pick XI</button>
+          <button id="reset">Reset Squad</button>
+          <button id="simulate">Simulate Match</button>
+        </div>
+        <p id="result" class="score"></p>
+        <p class="tiny">Abdulls included ✅ Abdul Samad, Abdullah Shafique, Abdullah Al Mamun.</p>
       </aside>
     </div>
   </div>
 
   <script>
     const players = [
-      { name: 'Virat Kohli', role: 'Batter', rating: 92 },
-      { name: 'Rohit Sharma', role: 'Batter', rating: 90 },
-      { name: 'Jasprit Bumrah', role: 'Bowler', rating: 93 },
-      { name: 'Babar Azam', role: 'Batter', rating: 91 },
-      { name: 'Kane Williamson', role: 'Batter', rating: 89 },
-      { name: 'Ben Stokes', role: 'All-Rounder', rating: 90 },
-      { name: 'Rashid Khan', role: 'Bowler', rating: 92 },
-      { name: 'Jos Buttler', role: 'Wicketkeeper', rating: 90 },
-      { name: 'Shaheen Afridi', role: 'Bowler', rating: 89 },
-      { name: 'Hardik Pandya', role: 'All-Rounder', rating: 88 },
-      { name: 'Travis Head', role: 'Batter', rating: 87 },
-      { name: 'Mohammed Shami', role: 'Bowler', rating: 88 },
-      { name: 'Abdul Samad', role: 'All-Rounder', rating: 81 },
-      { name: 'Abdullah Shafique', role: 'Batter', rating: 82 },
-      { name: 'Abdullah Al Mamun', role: 'Bowler', rating: 76 }
+      { name:'Virat Kohli', role:'Batter', rating:92, cost:11 },
+      { name:'Rohit Sharma', role:'Batter', rating:90, cost:10 },
+      { name:'Shubman Gill', role:'Batter', rating:88, cost:9 },
+      { name:'Babar Azam', role:'Batter', rating:91, cost:11 },
+      { name:'Kane Williamson', role:'Batter', rating:89, cost:9 },
+      { name:'Travis Head', role:'Batter', rating:87, cost:8 },
+      { name:'Jos Buttler', role:'Wicketkeeper', rating:90, cost:10 },
+      { name:'Mohammad Rizwan', role:'Wicketkeeper', rating:88, cost:9 },
+      { name:'Ben Stokes', role:'All-Rounder', rating:90, cost:10 },
+      { name:'Hardik Pandya', role:'All-Rounder', rating:88, cost:9 },
+      { name:'Ravindra Jadeja', role:'All-Rounder', rating:87, cost:8 },
+      { name:'Abdul Samad', role:'All-Rounder', rating:81, cost:6 },
+      { name:'Jasprit Bumrah', role:'Bowler', rating:93, cost:11 },
+      { name:'Rashid Khan', role:'Bowler', rating:92, cost:11 },
+      { name:'Shaheen Afridi', role:'Bowler', rating:89, cost:9 },
+      { name:'Mohammed Shami', role:'Bowler', rating:88, cost:8 },
+      { name:'Kuldeep Yadav', role:'Bowler', rating:85, cost:7 },
+      { name:'Abdullah Shafique', role:'Batter', rating:82, cost:6 },
+      { name:'Abdullah Al Mamun', role:'Bowler', rating:76, cost:5 }
     ];
 
+    const RULES = { squadSize: 11, budget: 100, min: { Batter: 3, Bowler: 3, 'All-Rounder': 1, Wicketkeeper: 1 } };
     const squad = [];
+
     const playersEl = document.getElementById('players');
     const squadEl = document.getElementById('squad');
-    const countEl = document.getElementById('count');
     const resultEl = document.getElementById('result');
 
-    function renderPlayers() {
-      playersEl.innerHTML = '';
-      players.forEach((p) => {
-        const inSquad = squad.find(s => s.name === p.name);
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-          <h3>${p.name}</h3>
-          <div class="meta">${p.role} • Rating ${p.rating}</div>
-          <button ${inSquad || squad.length >= 11 ? 'disabled' : ''}>${inSquad ? 'Added' : 'Add'}</button>
-        `;
-        card.querySelector('button').addEventListener('click', () => {
-          if (squad.length < 11 && !inSquad) {
-            squad.push(p);
-            render();
-          }
-        });
-        playersEl.appendChild(card);
-      });
+    const q = (id) => document.getElementById(id);
+    const roleCount = (role) => squad.filter(p => p.role === role).length;
+    const budgetUsed = () => squad.reduce((s,p)=>s+p.cost,0);
+
+    function rolesSatisfied() {
+      return Object.entries(RULES.min).every(([role, min]) => roleCount(role) >= min);
     }
 
-    function renderSquad() {
-      squadEl.innerHTML = squad.map(p => `<li>${p.name} <span class="meta">(${p.role}, ${p.rating})</span></li>`).join('');
-      countEl.textContent = squad.length;
+    function canAdd(player) {
+      if (squad.find(p => p.name === player.name)) return false;
+      if (squad.length >= RULES.squadSize) return false;
+      return budgetUsed() + player.cost <= RULES.budget;
+    }
+
+    function drawPlayers() {
+      const search = q('search').value.toLowerCase().trim();
+      const role = q('roleFilter').value;
+      playersEl.innerHTML = '';
+      players
+        .filter(p => (role === 'All' || p.role === role) && p.name.toLowerCase().includes(search))
+        .sort((a,b)=>b.rating-a.rating)
+        .forEach(p => {
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.innerHTML = `
+            <h3>${p.name}</h3>
+            <div class="meta">${p.role} • Rating ${p.rating} • Cost ${p.cost}</div>
+            <span class="pill">${canAdd(p) ? 'Available' : 'Unavailable'}</span>
+            <div style="margin-top:8px;"><button ${canAdd(p) ? '' : 'disabled'}>Add</button></div>
+          `;
+          card.querySelector('button').addEventListener('click', () => { if (canAdd(p)) { squad.push(p); render(); } });
+          playersEl.appendChild(card);
+        });
+    }
+
+    function drawSquad() {
+      q('teamHeader').textContent = `Your Squad (${squad.length}/${RULES.squadSize})`;
+      q('budgetUsed').textContent = budgetUsed();
+      q('rolesOk').textContent = rolesSatisfied() ? 'Yes' : 'No';
+      squadEl.innerHTML = squad.map((p, i) =>
+        `<li>${p.name} <span class="meta">(${p.role}, r${p.rating}, c${p.cost})</span> <button data-i="${i}">Remove</button></li>`
+      ).join('');
+      squadEl.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => {
+        squad.splice(Number(btn.dataset.i), 1);
+        render();
+      }));
+    }
+
+    function autoFill() {
+      squad.length = 0;
+      const sorted = [...players].sort((a,b)=>b.rating-a.rating);
+      const pick = (role, n) => sorted.filter(p => p.role===role && canAdd(p)).slice(0,n).forEach(p => squad.push(p));
+      pick('Wicketkeeper', RULES.min.Wicketkeeper);
+      pick('Batter', RULES.min.Batter);
+      pick('Bowler', RULES.min.Bowler);
+      pick('All-Rounder', RULES.min['All-Rounder']);
+      sorted.forEach(p => { if (canAdd(p)) squad.push(p); });
+      squad.length = RULES.squadSize;
+      render();
     }
 
     function simulate() {
-      if (squad.length !== 11) {
-        resultEl.innerHTML = 'Pick exactly 11 players first.';
-        resultEl.className = 'score';
+      if (squad.length !== RULES.squadSize) {
+        resultEl.className = 'score warn';
+        resultEl.textContent = `Need exactly ${RULES.squadSize} players.`;
         return;
       }
-      const avg = squad.reduce((sum, p) => sum + p.rating, 0) / squad.length;
-      const variance = Math.floor(Math.random() * 41) - 20;
-      const runs = Math.max(120, Math.floor(avg * 1.8) + variance);
-      const wktsLost = Math.floor(Math.random() * 8) + 2;
-      resultEl.innerHTML = `<span class="ok">Final Score: ${runs}/${wktsLost} (20 overs)</span>`;
-      resultEl.className = 'score';
+      if (!rolesSatisfied()) {
+        resultEl.className = 'score warn';
+        resultEl.textContent = 'Role requirements not met.';
+        return;
+      }
+      const batting = squad.filter(p => p.role !== 'Bowler').reduce((s,p)=>s+p.rating,0);
+      const bowling = squad.filter(p => p.role !== 'Batter').reduce((s,p)=>s+p.rating,0);
+      const baseRuns = Math.floor((batting / 7) * 1.9 + 95);
+      const oppositionPressure = Math.floor((180 - bowling) / 8);
+      const randomness = Math.floor(Math.random()*31)-15;
+      const runs = Math.max(105, baseRuns + oppositionPressure + randomness);
+      const wickets = Math.min(10, Math.max(2, 11 - Math.floor((batting + Math.random()*30)/30)));
+      resultEl.className = 'score ok';
+      resultEl.textContent = `Final Score: ${runs}/${wickets} in 20 overs`;
     }
 
-    function render() {
-      renderPlayers();
-      renderSquad();
-    }
+    function render() { drawPlayers(); drawSquad(); }
 
-    document.getElementById('simulate').addEventListener('click', simulate);
+    q('search').addEventListener('input', drawPlayers);
+    q('roleFilter').addEventListener('change', drawPlayers);
+    q('reset').addEventListener('click', () => { squad.length = 0; render(); resultEl.textContent=''; });
+    q('autoFill').addEventListener('click', autoFill);
+    q('simulate').addEventListener('click', simulate);
+
     render();
   </script>
 </body>
