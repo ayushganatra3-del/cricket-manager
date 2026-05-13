@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cricket Manager</title>
+  <style>
+    :root { font-family: Inter, system-ui, Arial, sans-serif; }
+    body { margin: 0; background: #0b1220; color: #e6edf7; }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    h1 { margin: 0 0 8px; }
+    .sub { color: #aab8d4; margin-bottom: 20px; }
+    .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+    .panel { background: #121b2f; border: 1px solid #243658; border-radius: 14px; padding: 16px; }
+    .players { display: grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); gap: 10px; }
+    .card { background: #16233d; border: 1px solid #2d4674; border-radius: 12px; padding: 12px; }
+    .card h3 { margin: 0 0 4px; font-size: 1rem; }
+    .meta { color: #adc0e6; font-size: .9rem; }
+    button { background: #2f6fed; color: #fff; border: 0; border-radius: 10px; padding: 8px 12px; cursor: pointer; }
+    button:hover { background: #235cd0; }
+    .selected { margin-top: 12px; }
+    .squad-list li { margin: 6px 0; }
+    .score { font-size: 1.3rem; font-weight: 700; }
+    .ok { color: #8dffb2; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>🏏 Cricket Manager</h1>
+    <div class="sub">Pick a squad of 11 from real-world players and simulate a quick T20 performance on localhost.</div>
+    <div class="grid">
+      <section class="panel">
+        <h2>Available Players</h2>
+        <div id="players" class="players"></div>
+      </section>
+      <aside class="panel">
+        <h2>Your Squad (<span id="count">0</span>/11)</h2>
+        <ul id="squad" class="squad-list"></ul>
+        <div class="selected">
+          <button id="simulate">Simulate Match</button>
+          <p id="result" class="score"></p>
+          <p class="meta">Tip: “Add abdulls” included ✅ — Abdul Samad, Abdullah Shafique, and Abdullah Al Mamun.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const players = [
+      { name: 'Virat Kohli', role: 'Batter', rating: 92 },
+      { name: 'Rohit Sharma', role: 'Batter', rating: 90 },
+      { name: 'Jasprit Bumrah', role: 'Bowler', rating: 93 },
+      { name: 'Babar Azam', role: 'Batter', rating: 91 },
+      { name: 'Kane Williamson', role: 'Batter', rating: 89 },
+      { name: 'Ben Stokes', role: 'All-Rounder', rating: 90 },
+      { name: 'Rashid Khan', role: 'Bowler', rating: 92 },
+      { name: 'Jos Buttler', role: 'Wicketkeeper', rating: 90 },
+      { name: 'Shaheen Afridi', role: 'Bowler', rating: 89 },
+      { name: 'Hardik Pandya', role: 'All-Rounder', rating: 88 },
+      { name: 'Travis Head', role: 'Batter', rating: 87 },
+      { name: 'Mohammed Shami', role: 'Bowler', rating: 88 },
+      { name: 'Abdul Samad', role: 'All-Rounder', rating: 81 },
+      { name: 'Abdullah Shafique', role: 'Batter', rating: 82 },
+      { name: 'Abdullah Al Mamun', role: 'Bowler', rating: 76 }
+    ];
+
+    const squad = [];
+    const playersEl = document.getElementById('players');
+    const squadEl = document.getElementById('squad');
+    const countEl = document.getElementById('count');
+    const resultEl = document.getElementById('result');
+
+    function renderPlayers() {
+      playersEl.innerHTML = '';
+      players.forEach((p) => {
+        const inSquad = squad.find(s => s.name === p.name);
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <h3>${p.name}</h3>
+          <div class="meta">${p.role} • Rating ${p.rating}</div>
+          <button ${inSquad || squad.length >= 11 ? 'disabled' : ''}>${inSquad ? 'Added' : 'Add'}</button>
+        `;
+        card.querySelector('button').addEventListener('click', () => {
+          if (squad.length < 11 && !inSquad) {
+            squad.push(p);
+            render();
+          }
+        });
+        playersEl.appendChild(card);
+      });
+    }
+
+    function renderSquad() {
+      squadEl.innerHTML = squad.map(p => `<li>${p.name} <span class="meta">(${p.role}, ${p.rating})</span></li>`).join('');
+      countEl.textContent = squad.length;
+    }
+
+    function simulate() {
+      if (squad.length !== 11) {
+        resultEl.innerHTML = 'Pick exactly 11 players first.';
+        resultEl.className = 'score';
+        return;
+      }
+      const avg = squad.reduce((sum, p) => sum + p.rating, 0) / squad.length;
+      const variance = Math.floor(Math.random() * 41) - 20;
+      const runs = Math.max(120, Math.floor(avg * 1.8) + variance);
+      const wktsLost = Math.floor(Math.random() * 8) + 2;
+      resultEl.innerHTML = `<span class="ok">Final Score: ${runs}/${wktsLost} (20 overs)</span>`;
+      resultEl.className = 'score';
+    }
+
+    function render() {
+      renderPlayers();
+      renderSquad();
+    }
+
+    document.getElementById('simulate').addEventListener('click', simulate);
+    render();
+  </script>
+</body>
+</html>
